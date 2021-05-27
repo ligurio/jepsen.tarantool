@@ -35,6 +35,9 @@
            (j/execute! conn [(str "CREATE TABLE IF NOT EXISTS " table-name
                              "(id INT NOT NULL PRIMARY KEY,
                              balance INT NOT NULL)")])
+           (j/execute! conn [(str "SELECT LUA('return box.space."
+                                  (clojure.string/upper-case table-name)
+                                  ":alter{ is_sync = true } or 1')")])
            (doseq [a (:accounts test)]
                (info "Populating account")
                (sql/insert! conn table-name {:id      a
@@ -63,11 +66,7 @@
                 (assoc op :type :fail, :value {:from from :to to :amount amount})
                 (assoc op :type :ok))))))
 
-  (teardown! [_ test]
-    (when-not (:leave-db-running? test)
-      (info (str "Drop table" table-name))
-      (cl/with-conn-failure-retry conn
-        (j/execute! conn [(str "DROP TABLE IF EXISTS " table-name)]))))
+  (teardown! [_ test])
 
   (close! [_ test]))
 
@@ -90,6 +89,9 @@
                                        "(id             INT NOT NULL PRIMARY KEY,"
                                        "account_id      INT NOT NULL,"
                                        "balance INT NOT NULL)")])
+                (j/execute! conn [(str "SELECT LUA('return box.space."
+                                       (clojure.string/upper-case (str table-name a))
+                                       ":alter{ is_sync = true } or 1')")])
                   (info "Populating account" a)
                   (sql/insert! conn (str table-name a)
                              {:id 0
@@ -129,12 +131,7 @@
                 (assoc op :type :fail)
                 (assoc op :type :ok))))))
 
-  (teardown! [_ test]
-    (when-not (:leave-db-running? test)
-      (cl/with-conn-failure-retry conn
-        (doseq [a (:accounts test)]
-          (info "Drop table" table-name a)
-          (j/execute! conn [(str "DROP TABLE IF EXISTS " table-name a)])))))
+  (teardown! [_ test])
 
   (close! [_ test]))
 
@@ -155,6 +152,9 @@
            (j/execute! conn [(str "CREATE TABLE IF NOT EXISTS " table-name
                              "(id INT NOT NULL PRIMARY KEY,
                              balance INT NOT NULL)")])
+           (j/execute! conn [(str "SELECT LUA('return box.space."
+                                  (clojure.string/upper-case table-name)
+                                  ":alter{ is_sync = true } or 1')")])
            (doseq [a (:accounts test)]
                (info "Populating account")
                (sql/insert! conn table-name {:id      a
@@ -193,11 +193,7 @@
                     (j/execute! con [(str "UPDATE " table-name " SET balance = balance + ? WHERE id = ?") amount to])
                     (assoc op :type :ok)))))))
 
-  (teardown! [_ test]
-    (when-not (:leave-db-running? test)
-      (info (str "Drop table" table-name))
-      (cl/with-conn-failure-retry conn
-        (j/execute! conn [(str "DROP TABLE IF EXISTS " table-name)]))))
+  (teardown! [_ test])
 
   (close! [_ test]))
 
@@ -219,6 +215,9 @@
                 (j/execute! conn [(str "CREATE TABLE IF NOT EXISTS " table-name a
                                        "(id     INT NOT NULL PRIMARY KEY,"
                                        "balance INT NOT NULL)")])
+                (j/execute! conn [(str "SELECT LUA('return box.space."
+                                       (clojure.string/upper-case (str table-name a))
+                                       ":alter{ is_sync = true } or 1')")])
                   (info "Populating account" a)
                   (sql/insert! conn (str table-name a)
                              {:id 0
@@ -268,12 +267,7 @@
                     (j/execute! con [(str "UPDATE " to " SET balance = balance + ? WHERE id = 0") amount])
                     (assoc op :type :ok)))))))
 
-  (teardown! [_ test]
-    (when-not (:leave-db-running? test)
-      (cl/with-conn-failure-retry conn
-        (doseq [a (:accounts test)]
-          (info "Drop table" table-name a)
-          (j/execute! conn [(str "DROP TABLE IF EXISTS " table-name a)])))))
+  (teardown! [_ test])
 
   (close! [_ test]))
 

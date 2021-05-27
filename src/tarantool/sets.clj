@@ -33,8 +33,9 @@
           (j/execute! conn [(str "CREATE TABLE IF NOT EXISTS " table-name
                             " (id INT NOT NULL PRIMARY KEY AUTOINCREMENT,
                             value INT NOT NULL)")])
-          (let [table (clojure.string/upper-case table-name)]
-            (j/execute! conn [(str "SELECT LUA('return box.space." table ":alter{ is_sync = true } or 1')")]))))
+          (j/execute! conn [(str "SELECT LUA('return box.space."
+                                 (clojure.string/upper-case table-name)
+                                 ":alter{ is_sync = true } or 1')")])))
     (assoc this :conn conn :node node)))
 
   (invoke! [this test op]
@@ -50,10 +51,7 @@
                      (mapv :VALUE)
                      (assoc op :type :ok, :value)))))))
 
-  (teardown! [_ test]
-    (when-not (:leave-db-running? test)
-      (cl/with-conn-failure-retry conn
-        (j/execute! conn [(str "DROP TABLE IF EXISTS " table-name)]))))
+  (teardown! [_ test])
 
   (close! [_ test]))
 
